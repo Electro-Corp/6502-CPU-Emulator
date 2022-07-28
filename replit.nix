@@ -1,6 +1,7 @@
 { pkgs }: {
     deps = [
-        pkgs.gdb-multitarget
+        pkgs.unixtools.util-linux
+pkgs.gdb-multitarget
 pkgs.cowsay
     ];
 }

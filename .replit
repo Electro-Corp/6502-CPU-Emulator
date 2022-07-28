@@ -1,4 +1,4 @@
-run = "g++ main.cpp;./a.out"
+run = "rm 6502log;g++ main.cpp;./a.out"
 
 [nix]
 channel = "stable-21_11"
