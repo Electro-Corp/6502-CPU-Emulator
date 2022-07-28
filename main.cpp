@@ -14,7 +14,11 @@ int line = 0;
 void loadvalue(int value);
 std::string getCommand(std::string fullCommand);
 std::string getValue(std::string fullCommand);
-std::list<int> memory;
+//const size_t fixedListSize(60000);
+
+//std::list<int> memoryvalues(fixedListSize);
+//std::list<int>::iterator memint;
+int memory[60000];
 int main(int args, char **argv){
   std::list <std::string> asmcodes;
   asmcodes.push_back("lda #$ff");
@@ -28,7 +32,7 @@ int main(int args, char **argv){
     value.erase (std::remove(value.begin(), value.end(), '$'), value.end());
     value.erase (std::remove(value.begin(), value.end(), '#'), value.end());
     
-   // value  = value.erase(std::remove(value.begin(), value.end(), '$'), value.end());
+    //value  = value.erase(std::remove(value.begin(), value.end(), '$'), value.end());
     if(command == "lda"){
       value = "0x" + value;
       std::cout<<"lda instruction: "<< value <<std::endl;
@@ -36,12 +40,13 @@ int main(int args, char **argv){
       loadvalue(ldafinal);
     }
     if(command == "sta"){
+      
       std::cout<<"sta instruction: "<< value <<std::endl;
       int finalval = std::stoi(value, 0, 16);
-      memory.insert(reg_Acc,finalval);
+      memory[finalval] = reg_Acc;
     }
     std::cout<<"Accelerator register: "<<std::hex<<reg_Acc<<std::endl;
-  }
+  }a
   return 0;
 }
 void loadvalue(int value){
@@ -50,6 +55,9 @@ void loadvalue(int value){
 std::string getCommand(std::string fullCommand){
   if (fullCommand.find("lda") != std::string::npos) {
       return "lda";
+  }
+  if (fullCommand.find("sta") != std::string::npos) {
+      return "sta";
   }
 }
 std::string getValue(std::string fullCommand){
