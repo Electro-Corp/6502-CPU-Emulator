@@ -1,6 +1,5 @@
-/*
-INSTRUCTION SET REFRENCE: https://sites.google.com/site/6502asembly/6502-instruction-set/6502-instruction-set-by-alphabetical-order
-*/
+//https://sites.google.com/site/6502asembly/6502-instruction-set/6502-instruction-set-by-alphabetical-order
+//https://www.pagetable.com/c64ref/6502/
 #include <iostream>
 #include <vector>
 #include <sstream>
@@ -27,22 +26,28 @@ void dumpMemory();
 //std::list<int> memoryvalues(fixedListSize);
 //std::list<int>::iterator memint;
 int memory[60000];
+int ishex = 0;
+int isaddr = 0;
 int main(int args, char **argv){
   std::list <std::string> asmcodes;
   asmcodes.push_back("lda #$ff");
   asmcodes.push_back("sta $6002");
   asmcodes.push_back("ldx #$0a");
   asmcodes.push_back("stx $6000");
+  asmcodes.push_back("and $ff");
+  asmcodes.push_back("lda #$ff");
+  asmcodes.push_back("sta $6002");
+  asmcodes.push_back("adc #$0a");
   std::string command;
   std::cout<<"CPU Execution Start"<<std::endl;
   for(std::list<std::string>::iterator i = asmcodes.begin(); i != asmcodes.end();i++){
     command = getCommand(*i);
     std::cout<<"Current Command: "<<command<<std::endl;
     std::string value = getValue(*i);
+    if(command.find("$") != std::string::npos){isaddr = 1;}else{isaddr = 0;};
+    if(command.find("#") != std::string::npos){ishex = 1;}else{ishex = 0;};
     value.erase (std::remove(value.begin(), value.end(), '$'), value.end());
     value.erase (std::remove(value.begin(), value.end(), '#'), value.end());
-    
-    //value  = value.erase(std::remove(value.begin(), value.end(), '$'), value.end());
     if(command == "lda"){
       value = "0x" + value;
       std::cout<<"lda instruction: "<< value <<std::endl;
@@ -75,6 +80,20 @@ int main(int args, char **argv){
       std::cout<<"sty instruction: "<< value <<std::endl;
       int finalval = std::stoi(value, 0, 16);
       memory[finalval] = reg_Y;
+    }
+    if(command == "adc"){
+      std::cout<<"adc instruction: "<<value<<std::endl;
+      int finalval = std::stoi(value, 0, 16);
+      reg_Acc = reg_Acc + finalval;
+    }
+    if(command == "and"){
+      std::cout<<"and instruction: "<<value<<std::endl;
+      int finalval = std::stoi(value, 0, 16);
+      if(reg_Acc == finalval){
+      	reg_Acc = 1;
+      }else{
+      	reg_Acc = 0;
+      }
     }
     std::cout<<"Accelerator register: "<<std::hex<<reg_Acc<<std::endl;
     std::cout<<"X register: "<<std::hex<<reg_X<<std::endl;
@@ -111,6 +130,12 @@ std::string getCommand(std::string fullCommand){
   }
   if (fullCommand.find("sty") != std::string::npos) {
       return "sty";
+  }
+  if (fullCommand.find("adc") != std::string::npos) {
+      return "adc";
+  }
+  if (fullCommand.find("and") != std::string::npos) {
+      return "and";
   }
 }
 std::string getValue(std::string fullCommand){
