@@ -7,15 +7,16 @@ Hex : https://gist.github.com/bit-hack/3be16a5333a50732d3eee85c962157a7
 #include <list>
 #include <fstream>
 #include <cstdint>
+#include <vector>
 
-uint8_t reg_A = 0x00;
+unsigned int reg_A = 0x00;
 unsigned int reg_X = 0x00;
 unsigned int reg_P = 0x00;
 unsigned int reg_S = 0x00;
 int reg_PC;
 
 int flag_Z = 0;
-
+int broke = 0;
 int memory[64000];
 unsigned short opcode;
 
@@ -26,17 +27,32 @@ unsigned short opcode;
 //int data[] = {0xa9, 0xc0, 0xaa, 0xe8, 0x69, 0xc4};
 
 //MORE COMMANDS
-int startaddr = 0x600;
-int data[] = {0xa2,0x08,0xca,0x8e,0x00,0x02,0xe0,0x03,0xd0,0xf8,0x8e,0x01,0x02};
+int startaddr = 248;
+//int data[] = {0xa2,0x08,0xca,0x8e,0x00,0x02,0xe0,0x03,0xd0,0xf8,0x8e,0x01,0x02,0x00};
+
 int opcodes[] = {0xa9,0x8d,0xa2,0x8e,0xaa,0xe8,0xca,0x69,0xe0,0xd0};
+///0xa9       LDA        #          SZ         2          2
+///0x8d       STA        abs                   4          3
+///0xa2       LDX        #          SZ         2          2
+///0x8e       STX        abs                   4          3
+///0xaa       TAX                   SZ         2          1
+///0xe8       INX                   SZ         2          1
+///0xca       DEX                   SZ         2          1
+///0x69       ADC        #          SVZC       2          2
+///0xe0       CPX        #          SZC        2          2
+///0xd0       BNE        rel                   2/1*       2
 int isopcode(int value);
 void loadData();
 void dumpMemory();
-int main(){
+/*int main(){
     loadData();
-    dumpMemory();
+    //dumpMemory();
     int i;
-    for(i=0;i<sizeof(data)/ sizeof(data[0]);i++){
+    //for(i=0;i<sizeof(data)/ sizeof(data[0]);i++){
+    i = 0;
+    while(broke == 0){
+      i++;
+      std::cout<<"AT: "<<memory[startaddr+i]<<std::endl;
       switch (memory[startaddr+i]){
         //LDA
         case 0xa9:
@@ -45,24 +61,28 @@ int main(){
             reg_A = reg_A+memory[startaddr+i];
             i++;
           }
-          
-          
+          i = i - 1;
           break;
         //LDX
         case 0xa2:
           std::cout<<"LDX COMMAND; VALUE: "<<data[i+1]<<std::endl;
           i++;
           while(isopcode(memory[startaddr+i]) != 1){
+                        
             reg_X = reg_X + memory[startaddr+i];
             i++;
           }
-          
+          i = i - 1;          
           break;
         //STA
         case 0x8d:{
           int addr;
-          while(isopcode(memory[startaddr+i]) != 1){
-            addr = memory[startaddr+i];
+          while(isopcode(memory[startaddr+i]) != 1 || i>62918){
+            if(i+1>sizeof(data)/ sizeof(data[0])){
+              break;
+            }
+            std::cout<<"BOI: "<<memory[startaddr+i]<<std::endl;
+            addr = addr+memory[startaddr+i];
             i++;
           }
           std::cout<<"STA COMMAND; ADDR: "<<addr<<std::endl;
@@ -74,16 +94,37 @@ int main(){
         //STX      
         case 0x8e:{
           int addr;
-          //i++;
-          while(isopcode(memory[startaddr+i]) != 1){
-            //std::cout<<"BOI: "<<memory[startaddr+i]<<std::endl;
+          //addr = 0x00;
+          i++;
+          while(isopcode(memory[startaddr+i]) != 1 || i>62918){
+           if(i+1>sizeof(data)/ sizeof(data[0])){
+              break;
+            }
             addr = addr+memory[startaddr+i];
             i++;
           }
           std::cout<<"STX COMMAND; ADDR: "<<addr<<std::endl;
           memory[addr] = reg_X;
           std::cout<<memory[addr]<<std::endl;
+          //i++;
+          }
+          break;
+        //BNE
+        case 0xd0:{}
+          int addr;
+          //addr = 0x00;
           i++;
+          while(isopcode(memory[startaddr+i]) != 1 || i>62918){
+           if(i+1>sizeof(data)/ sizeof(data[0])){
+              break;
+            }
+            addr = addr+memory[startaddr+i];
+            i++;
+          }
+          std::cout<<"BNE COMMAND; ADDR: "<<addr<<std::endl;
+          if(flag_Z == 0){
+            startaddr = addr;
+            i = 0;
           }
           break;
         case 0xaa:{}
@@ -119,7 +160,9 @@ int main(){
           }
           }
           break;
-        
+        case 0x00:{
+          broke = 1;
+        }
         // default:
         //   std::cout<<"Unrecognized"<<std::endl;
         //   break;
@@ -130,6 +173,11 @@ int main(){
       std::cout<<"=============================="<<std::endl;
     }
   dumpMemory();
+}*/
+int main(){
+  loadData();
+  dumpMemory();
+  
 }
 int isopcode(int value){
   int i;
@@ -144,14 +192,23 @@ int isopcode(int value){
 }
 void loadData(){
   int i;
-  for(i=0;i<sizeof(data) / sizeof(data[0]);i++){
-    // char full[20];
-    // while(isopcode(memory[i+startaddr]) != 1){
-    //   full[]
-    // }
-    memory[i+startaddr] = data[i];
-    std::cout<<data[i]<<std::endl;
+  for(i=0;i<64000;i++){
+    memory[i] = 0xea;  
   }
+  std::ifstream file;
+  file.open("/home/runner/6502-CPU-Emulator/test.bin",std::ios::in|std::ios::binary);
+  int size = 1;
+  std::vector<uint8_t> memblock(size);
+  file.seekg(0, std::ios::beg);
+  file.read(reinterpret_cast<char*>(memblock.data()), size); 
+  // for(i=0;i<sizeof(data) / sizeof(data[0]);i++){
+  //   // char full[20];
+  //   // while(isopcode(memory[i+startaddr]) != 1){
+  //   //   full[]
+  //   // }
+  //   memory[i+startaddr] = data[i];
+  //   std::cout<<data[i]<<std::endl;
+  // }
 }
 void dumpMemory(){
 	std::ofstream dumpFile;
