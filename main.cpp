@@ -8,7 +8,8 @@ Hex : https://gist.github.com/bit-hack/3be16a5333a50732d3eee85c962157a7
 #include <fstream>
 #include <cstdint>
 #include <vector>
-
+#include <sstream>
+#include <iomanip>
 unsigned int reg_A = 0x00;
 unsigned int reg_X = 0x00;
 unsigned int reg_P = 0x00;
@@ -44,6 +45,7 @@ int opcodes[] = {0xa9,0x8d,0xa2,0x8e,0xaa,0xe8,0xca,0x69,0xe0,0xd0};
 int isopcode(int value);
 void loadData();
 void dumpMemory();
+std::string ToHex(const std::string& s, bool upper_case);
 /*int main(){
     loadData();
     //dumpMemory();
@@ -176,6 +178,7 @@ void dumpMemory();
 }*/
 int main(){
   loadData();
+  
   dumpMemory();
   
 }
@@ -195,18 +198,28 @@ void loadData(){
   for(i=0;i<64000;i++){
     memory[i] = 0xea;  
   }
-  // std::ifstream file;
-  // file.open("/home/runner/6502-CPU-Emulator/test.bin",std::ios::in|std::ios::binary);
-  // int size = 1;
-  // std::vector<uint8_t> memblock(size);
-  // file.seekg(0, std::ios::beg);
-  // file.read(reinterpret_cast<char*>(memblock.data()), size); 
+  std::ifstream::pos_type size;
+  char * memblock;
 
-  FILE* file = fopen("/home/runner/6502-CPU-Emulator/test.bin", "rb");
+  std::ifstream file ("/home/segfault/ben_eater/rom.bin", std::ios::in|std::ios::binary|std::ios::ate);
+  if (file.is_open())
+  {
+    size = file.tellg();
+    memblock = new char [size];
+    file.seekg (0, std::ios::beg);
+    file.read (memblock, size);
+    std::string tohexed = ToHex(memblock, true);
+
+
+    std::cout << tohexed << std::endl;
+    file.close();
+  }
+  /*FILE* file = fopen("/home/segfault/ben_eater/rom.bin", "rb");
   char buf[8];
   for (i=0;i<64000;i++){
     fread(buf, 1, 8, file);
-  }
+    //memory[i] = buf;
+  }*/
   
   // for(i=0;i<sizeof(data) / sizeof(data[0]);i++){
   //   // char full[20];
@@ -232,3 +245,37 @@ void dumpMemory(){
   std::cout<<"Finished."<<std::endl;
 	dumpFile.close();
 }
+// https://stackoverflow.com/questions/9621893/c-read-binary-file-and-convert-to-hex
+std::string ToHex(const std::string& s, bool upper_case)
+{
+    std::ostringstream ret;
+
+    for (std::string::size_type i = 0; i < s.length(); ++i)
+    {
+        int z = s[i]&0xff;
+        ret << std::hex << std::setfill('0') << std::setw(2) << (upper_case ? std::uppercase : std::nouppercase) << z;
+    }
+
+    return ret.str();
+}
+
+
+/// crap dump
+/*
+FILE* file = fopen("/home/segfault/ben_eater/rom.bin", "rb");
+  char buf[8];
+  for (int i=0;i<64000;i++){
+    fread(buf, 1, 8, file);
+    std::string code(buf);
+    code = "0x"+code;
+    int val = std::atoi(code.c_str());
+    switch(val){
+    	case 0xea:
+    		std::cout<<"BRUH BRUH BRUH BURH ALERT ALERT"<<std::endl;
+    		break;
+    	default:
+    		std::cout<<"NOPE: "<<val<<std::endl;
+    }
+  }
+ */
+ 
