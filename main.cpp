@@ -195,12 +195,19 @@ void loadData(){
   for(i=0;i<64000;i++){
     memory[i] = 0xea;  
   }
-  std::ifstream file;
-  file.open("/home/runner/6502-CPU-Emulator/test.bin",std::ios::in|std::ios::binary);
-  int size = 1;
-  std::vector<uint8_t> memblock(size);
-  file.seekg(0, std::ios::beg);
-  file.read(reinterpret_cast<char*>(memblock.data()), size); 
+  // std::ifstream file;
+  // file.open("/home/runner/6502-CPU-Emulator/test.bin",std::ios::in|std::ios::binary);
+  // int size = 1;
+  // std::vector<uint8_t> memblock(size);
+  // file.seekg(0, std::ios::beg);
+  // file.read(reinterpret_cast<char*>(memblock.data()), size); 
+
+  FILE* file = fopen("/home/runner/6502-CPU-Emulator/test.bin", "rb");
+  char buf[8];
+  for (i=0;i<64000;i++){
+    fread(buf, 1, 8, file);
+  }
+  
   // for(i=0;i<sizeof(data) / sizeof(data[0]);i++){
   //   // char full[20];
   //   // while(isopcode(memory[i+startaddr]) != 1){
